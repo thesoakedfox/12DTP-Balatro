@@ -1,44 +1,50 @@
-/* Reset some default browser styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* CSS HEX */
+:root {
+    --raisin-black: #16141Cff;
+    --blue-ncs: #2289C0ff;
+    --rich-black: #0F2130ff;
+    --prussian-blue: #062B3Dff;
+    --fire-engine-red: #CD2C19ff;
 }
 
-/* Set base font and background */
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 16px;
-    background: #f5f5f5;
-    color: #222;
-    line-height: 1.5;
+    font-family: sans-serif;
+    background-color: var(--rich-black);
+    color: white;
+    margin: 0;
 }
 
-/* Links */
-a {
-    color: #0077cc;
-    text-decoration: none;
-}
-a:hover {
-    text-decoration: underline;
-}
-
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    margin-bottom: 0.5em;
-}
-
-/* Images */
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
-/* Container utility */
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
+}
+
+nav {
+    background-color: var(--prussian-blue);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 1rem;
+}
+
+nav a:hover {
+    color: var(--blue-ncs);
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.grid-item {
+    background-color: var(--prussian-blue);
+    border: 1px solid var(--blue-ncs);
+    padding: 1rem;
+    border-radius: 5px;
 }
