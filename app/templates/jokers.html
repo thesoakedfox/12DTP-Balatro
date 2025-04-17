@@ -1,0 +1,15 @@
+{% extends "layouts.html" %}
+{% block content %}
+<div class="grid-container">
+    {% for joker in jokers %}
+    <div class="grid-item">
+        <h2>{{ joker.name }}</h2>
+        <p><strong>Cost:</strong> {{ joker.cost }}</p>
+        <p><strong>Rarity:</strong> {{ joker.rarity }}</p>
+        <p><strong>Unlock:</strong> {{ joker.unlock_req }}</p>
+        <p><strong>Type:</strong> {{ joker.type }}</p>
+        <p><strong>Activation:</strong> {{ joker.activation }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
