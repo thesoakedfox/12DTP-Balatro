@@ -36,15 +36,101 @@ nav a:hover {
     color: var(--blue-ncs);
 }
 
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+/* Table Styles */
+.table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
 }
 
-.grid-item {
+.jokers-table {
+    width: 100%;
+    border-collapse: collapse;
     background-color: var(--prussian-blue);
-    border: 1px solid var(--blue-ncs);
+}
+
+.jokers-table th,
+.jokers-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--blue-ncs);
+}
+
+.jokers-table th {
+    background-color: var(--blue-ncs);
+    font-weight: bold;
+}
+
+.jokers-table tr:hover {
+    background-color: rgba(34, 137, 192, 0.2);
+}
+
+.jokers-table td {
+    border-right: 1px solid var(--blue-ncs);
+}
+
+.jokers-table td:last-child,
+.jokers-table th:last-child {
+    border-right: none;
+}
+
+/* Sort Controls */
+.sort-controls {
+    background-color: var(--prussian-blue);
     padding: 1rem;
     border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.sort-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.sort-form label {
+    font-weight: bold;
+}
+
+.sort-form select {
+    padding: 0.5rem;
+    border-radius: 3px;
+    background-color: white;
+    color: black;
+    border: none;
+}
+
+.sort-form select:focus {
+    outline: 2px solid var(--blue-ncs);
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .sort-form {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .sort-form > * {
+        margin-bottom: 0.5rem;
+    }
+    
+    .jokers-table {
+        font-size: 0.9em;
+    }
+    
+    .jokers-table th,
+    .jokers-table td {
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .jokers-table {
+        font-size: 0.8em;
+    }
+    
+    .container {
+        padding: 0.5rem;
+    }
 }

@@ -1,15 +1,54 @@
 {% extends "layouts.html" %}
 {% block content %}
-<div class="grid-container">
-    {% for joker in jokers %}
-    <div class="grid-item">
-        <h2>{{ joker.name }}</h2>
-        <p><strong>Cost:</strong> {{ joker.cost }}</p>
-        <p><strong>Rarity:</strong> {{ joker.rarity }}</p>
-        <p><strong>Unlock:</strong> {{ joker.unlock_req }}</p>
-        <p><strong>Type:</strong> {{ joker.type }}</p>
-        <p><strong>Activation:</strong> {{ joker.activation }}</p>
-    </div>
-    {% endfor %}
+<div class="sort-controls">
+    <h2>Sort Jokers</h2>
+    <form method="GET" class="sort-form">
+        <label for="sort_by">Sort by:</label>
+        <select name="sort_by" id="sort_by" onchange="this.form.submit()">
+            <option value="id" {% if current_sort == 'id' %}selected{% endif %}>ID</option>
+            <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name</option>
+            <option value="cost" {% if current_sort == 'cost' %}selected{% endif %}>Cost</option>
+            <option value="rarity_id" {% if current_sort == 'rarity_id' %}selected{% endif %}>Rarity</option>
+        </select>
+        
+        <label for="order">Order:</label>
+        <select name="order" id="order" onchange="this.form.submit()">
+            <option value="asc" {% if current_order == 'asc' %}selected{% endif %}>Ascending</option>
+            <option value="desc" {% if current_order == 'desc' %}selected{% endif %}>Descending</option>
+        </select>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="jokers-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Cost</th>
+                <th>Rarity</th>
+                <th>Unlock Requirement</th>
+                <th>Type</th>
+                <th>Activation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for joker in jokers %}
+            <tr>
+                <td>{{ joker.id }}</td>
+                <td>{{ joker.name }}</td>
+                <td>{{ joker.cost }}</td>
+                <td>{{ joker.rarity }}</td>
+                <td>{{ joker.unlock_req }}</td>
+                <td>{{ joker.type }}</td>
+                <td>{{ joker.activation }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">No jokers found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}
