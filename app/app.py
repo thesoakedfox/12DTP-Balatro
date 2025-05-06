@@ -18,6 +18,11 @@ def jokers():
     sort_by = request.args.get('sort_by', 'id')
     order = request.args.get('order', 'asc')
     
+    # Get filter parameters
+    rarity_filter = request.args.get('rarity', 'all')
+    type_filter = request.args.get('type', 'all')
+    activation_filter = request.args.get('activation', 'all')
+    
     # Validate sort parameters to prevent SQL injection
     valid_sort_columns = ['id', 'name', 'cost', 'rarity_id']
     valid_orders = ['asc', 'desc']
@@ -41,7 +46,13 @@ def jokers():
     
     conn = get_db_connection()
     try:
-        jokers = conn.execute(f'''
+        # Get filter options for the dropdowns
+        rarities = conn.execute('SELECT id, rarity_name FROM Rarity ORDER BY id').fetchall()
+        types = conn.execute('SELECT id, type_name FROM Type ORDER BY id').fetchall()
+        activations = conn.execute('SELECT id, activation_name FROM Activation ORDER BY id').fetchall()
+        
+        # Build the query with optional filters
+        base_query = '''
             SELECT
                 j.id,
                 j.name,
@@ -54,18 +65,50 @@ def jokers():
             JOIN Rarity r ON j.rarity_id = r.id
             JOIN Type t ON j.type_id = t.id
             JOIN Activation a ON j.activation_id = a.id
-            ORDER BY {sort_column_sql} {order_sql}
-        ''').fetchall()
+        '''
+        
+        # Add WHERE conditions based on filters
+        where_conditions = []
+        params = []
+        
+        if rarity_filter != 'all':
+            where_conditions.append('r.id = ?')
+            params.append(rarity_filter)
+            
+        if type_filter != 'all':
+            where_conditions.append('t.id = ?')
+            params.append(type_filter)
+            
+        if activation_filter != 'all':
+            where_conditions.append('a.id = ?')
+            params.append(activation_filter)
+        
+        query = base_query
+        if where_conditions:
+            query += ' WHERE ' + ' AND '.join(where_conditions)
+            
+        query += f' ORDER BY {sort_column_sql} {order_sql}'
+        
+        jokers = conn.execute(query, params).fetchall()
     except Exception as e:
         # Handle any database errors
         jokers = []
+        rarities = []
+        types = []
+        activations = []
     finally:
         conn.close()
     
     return render_template('jokers.html', 
-                          jokers=jokers, 
+                          jokers=jokers,
+                          rarities=rarities,
+                          types=types,
+                          activations=activations,
                           current_sort=sort_by, 
-                          current_order=order)
+                          current_order=order,
+                          rarity_filter=rarity_filter,
+                          type_filter=type_filter,
+                          activation_filter=activation_filter)
 
 if __name__ == '__main__':
     app.run(debug=True)
