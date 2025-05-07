@@ -1,54 +1,96 @@
 {% extends "layouts.html" %}
 {% block content %}
-<div class="sort-controls">
-    <h2>Sort Jokers</h2>
-    <form method="GET" class="sort-form">
-        <label for="sort_by">Sort by:</label>
-        <select name="sort_by" id="sort_by" onchange="this.form.submit()">
-            <option value="id" {% if current_sort == 'id' %}selected{% endif %}>ID</option>
-            <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name</option>
-            <option value="cost" {% if current_sort == 'cost' %}selected{% endif %}>Cost</option>
-            <option value="rarity_id" {% if current_sort == 'rarity_id' %}selected{% endif %}>Rarity</option>
-        </select>
-        
-        <label for="order">Order:</label>
-        <select name="order" id="order" onchange="this.form.submit()">
-            <option value="asc" {% if current_order == 'asc' %}selected{% endif %}>Ascending</option>
-            <option value="desc" {% if current_order == 'desc' %}selected{% endif %}>Descending</option>
-        </select>
-    </form>
+<div class="controls-container">
+    <div class="sort-controls">
+        <h2>Sort Jokers</h2>
+        <form method="GET" class="sort-form">
+            <input type="hidden" name="rarity" value="{{ rarity_filter }}">
+            <input type="hidden" name="type" value="{{ type_filter }}">
+            <input type="hidden" name="activation" value="{{ activation_filter }}">
+            
+            <label for="sort_by">Sort by:</label>
+            <select name="sort_by" id="sort_by" onchange="this.form.submit()">
+                <option value="id" {% if current_sort == 'id' %}selected{% endif %}>ID</option>
+                <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name</option>
+                <option value="cost" {% if current_sort == 'cost' %}selected{% endif %}>Cost</option>
+                <option value="rarity_id" {% if current_sort == 'rarity_id' %}selected{% endif %}>Rarity</option>
+            </select>
+            
+            <label for="order">Order:</label>
+            <select name="order" id="order" onchange="this.form.submit()">
+                <option value="asc" {% if current_order == 'asc' %}selected{% endif %}>Ascending</option>
+                <option value="desc" {% if current_order == 'desc' %}selected{% endif %}>Descending</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="filter-controls">
+        <h2>Filter Jokers</h2>
+        <form method="GET" class="filter-form">
+            <input type="hidden" name="sort_by" value="{{ current_sort }}">
+            <input type="hidden" name="order" value="{{ current_order }}">
+            
+            <label for="rarity">Rarity:</label>
+            <select name="rarity" id="rarity" onchange="this.form.submit()">
+                <option value="all">All Rarities</option>
+                {% for rarity in rarities %}
+                <option value="{{ rarity.id }}" {% if rarity_filter == rarity.id|string %}selected{% endif %}>
+                    {{ rarity.rarity_name }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <label for="type">Type:</label>
+            <select name="type" id="type" onchange="this.form.submit()">
+                <option value="all">All Types</option>
+                {% for type in types %}
+                <option value="{{ type.id }}" {% if type_filter == type.id|string %}selected{% endif %}>
+                    {{ type.type_name }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <label for="activation">Activation:</label>
+            <select name="activation" id="activation" onchange="this.form.submit()">
+                <option value="all">All Activations</option>
+                {% for activation in activations %}
+                <option value="{{ activation.id }}" {% if activation_filter == activation.id|string %}selected{% endif %}>
+                    {{ activation.activation_name }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit">Apply Filters</button>
+        </form>
+    </div>
 </div>
 
-<div class="table-container">
-    <table class="jokers-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Cost</th>
-                <th>Rarity</th>
-                <th>Unlock Requirement</th>
-                <th>Type</th>
-                <th>Activation</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for joker in jokers %}
-            <tr>
-                <td>{{ joker.id }}</td>
-                <td>{{ joker.name }}</td>
-                <td>{{ joker.cost }}</td>
-                <td>{{ joker.rarity }}</td>
-                <td>{{ joker.unlock_req }}</td>
-                <td>{{ joker.type }}</td>
-                <td>{{ joker.activation }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="7">No jokers found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="grid-container">
+    <div class="grid-header">
+        <div class="header-item">ID</div>
+        <div class="header-item">Name</div>
+        <div class="header-item">Cost</div>
+        <div class="header-item">Rarity</div>
+        <div class="header-item">Unlock Requirement</div>
+        <div class="header-item">Type</div>
+        <div class="header-item">Activation</div>
+    </div>
+    <div class="grid-body">
+        {% for joker in jokers %}
+        <div class="grid-row">
+            <div class="cell">{{ joker.id }}</div>
+            <div class="cell">{{ joker.name }}</div>
+            <div class="cell">{{ joker.cost }}</div>
+            <div class="cell">{{ joker.rarity }}</div>
+            <div class="cell">{{ joker.unlock_req }}</div>
+            <div class="cell">{{ joker.type }}</div>
+            <div class="cell">{{ joker.activation }}</div>
+        </div>
+        {% else %}
+        <div class="no-results">
+            No jokers found matching the selected filters.
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
