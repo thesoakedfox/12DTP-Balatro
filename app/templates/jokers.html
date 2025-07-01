@@ -67,6 +67,7 @@
 
 <div class="grid-container">
     <div class="grid-header">
+        <div class="header-item">Sprite</div>
         <div class="header-item">ID</div>
         <div class="header-item">Name</div>
         <div class="header-item">Cost</div>
@@ -78,6 +79,13 @@
     <div class="grid-body">
         {% for joker in jokers %}
         <div class="grid-row">
+            <div class="cell">
+                {% if joker.sprite %}
+                    <img src="{{ url_for('static', filename='sprites/' + joker.sprite) }}" alt="{{ joker.name }}" style="max-width: 50px; max-height: 70px;">
+                {% else %}
+                    <span style="color: #888;">No sprite</span>
+                {% endif %}
+            </div>
             <div class="cell">{{ joker.id }}</div>
             <div class="cell">{{ joker.name }}</div>
             <div class="cell">{{ joker.cost }}</div>
