@@ -60,7 +60,8 @@ def jokers():
                 r.rarity_name as rarity,
                 j.unlock_req,
                 t.type_name as type,
-                a.activation_name as activation
+                a.activation_name as activation,
+                j.sprite
             FROM Joker j
             JOIN Rarity r ON j.rarity_id = r.id
             JOIN Type t ON j.type_id = t.id

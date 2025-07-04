@@ -97,7 +97,7 @@ nav a:hover {
 /* Grid Container for Joker Data */
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: 120px 60px 1fr 0.5fr 1fr 2fr 1fr 1fr;
     gap: 1px;
     background-color: var(--blue-ncs);
     border: 1px solid var(--blue-ncs);
@@ -129,6 +129,8 @@ nav a:hover {
     background-color: var(--prussian-blue);
     text-align: left;
     word-break: break-word;
+    display: flex;
+    align-items: center;
 }
 
 .header-item {
@@ -158,7 +160,7 @@ nav a:hover {
     }
     
     .grid-container {
-        grid-template-columns: repeat(7, minmax(100px, 1fr));
+        grid-template-columns: 100px 50px 1fr 0.5fr 1fr 2fr 1fr 1fr;
         font-size: 0.9em;
     }
     
@@ -178,6 +180,7 @@ nav a:hover {
     
     .grid-container {
         font-size: 0.8em;
+        grid-template-columns: 80px 40px 1fr 0.5fr 1fr 2fr 1fr 1fr;
     }
     
     .header-item, .cell {
@@ -191,6 +194,6 @@ nav a:hover {
     }
     
     .grid-container {
-        grid-template-columns: repeat(7, minmax(80px, 1fr));
+        grid-template-columns: 80px 40px 1fr 0.5fr 1fr 2fr 1fr 1fr;
     }
 }
