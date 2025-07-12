@@ -22,6 +22,11 @@ def jokers():
     rarity_filter = request.args.get('rarity', 'all')
     type_filter = request.args.get('type', 'all')
     activation_filter = request.args.get('activation', 'all')
+    search_query = request.args.get('search', '').strip()
+    
+    # Limit search query length to prevent abuse
+    if len(search_query) > 100:
+        search_query = search_query[:100]
     
     # Validate sort parameters to prevent SQL injection
     valid_sort_columns = ['id', 'name', 'cost', 'rarity_id']
@@ -83,6 +88,10 @@ def jokers():
         if activation_filter != 'all':
             where_conditions.append('a.id = ?')
             params.append(activation_filter)
+            
+        if search_query:
+            where_conditions.append('j.name LIKE ?')
+            params.append(f'%{search_query}%')
         
         query = base_query
         if where_conditions:
@@ -109,7 +118,8 @@ def jokers():
                           current_order=order,
                           rarity_filter=rarity_filter,
                           type_filter=type_filter,
-                          activation_filter=activation_filter)
+                          activation_filter=activation_filter,
+                          search_query=search_query)
 
 # Custom 404 error handler
 @app.errorhandler(404)

@@ -7,6 +7,7 @@
             <input type="hidden" name="rarity" value="{{ rarity_filter }}">
             <input type="hidden" name="type" value="{{ type_filter }}">
             <input type="hidden" name="activation" value="{{ activation_filter }}">
+            <input type="hidden" name="search" value="{{ search_query }}">
             
             <label for="sort_by">Sort by:</label>
             <select name="sort_by" id="sort_by" onchange="this.form.submit()">
@@ -29,6 +30,7 @@
         <form method="GET" class="filter-form">
             <input type="hidden" name="sort_by" value="{{ current_sort }}">
             <input type="hidden" name="order" value="{{ current_order }}">
+            <input type="hidden" name="search" value="{{ search_query }}">
             
             <label for="rarity">Rarity:</label>
             <select name="rarity" id="rarity" onchange="this.form.submit()">
@@ -65,6 +67,22 @@
     </div>
 </div>
 
+<div class="search-container">
+    <form method="GET" class="search-form">
+        <input type="hidden" name="sort_by" value="{{ current_sort }}">
+        <input type="hidden" name="order" value="{{ current_order }}">
+        <input type="hidden" name="rarity" value="{{ rarity_filter }}">
+        <input type="hidden" name="type" value="{{ type_filter }}">
+        <input type="hidden" name="activation" value="{{ activation_filter }}">
+        
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Search jokers by name..." class="search-input" maxlength="100">
+        <button type="submit" class="search-button">Search</button>
+        {% if search_query %}
+        <a href="{{ url_for('jokers', sort_by=current_sort, order=current_order, rarity=rarity_filter, type=type_filter, activation=activation_filter) }}" class="clear-search">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
 <div class="grid-container">
     <div class="grid-header">
         <div class="header-item">Sprite</div>
@@ -81,7 +99,7 @@
         <div class="grid-row">
             <div class="cell">
                 {% if joker.sprite %}
-                    <img src="{{ url_for('static', filename='sprites/' + joker.sprite) }}" alt="{{ joker.name }}" style="max-width: 50px; max-height: 70px;">
+                    <img src="{{ url_for('static', filename='sprites/' + joker.sprite) }}" alt="{{ joker.name }}" style="max-width: 100px; max-height: 140px;">
                 {% else %}
                     <span style="color: #888;">No sprite</span>
                 {% endif %}
