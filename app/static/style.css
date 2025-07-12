@@ -7,8 +7,16 @@
     --fire-engine-red: #CD2C19ff;
 }
 
+/* Custom Font */
+@font-face {
+    font-family: 'Balatro';
+    src: url('./fonts/balatro.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
-    font-family: sans-serif;
+    font-family: 'Balatro', sans-serif;
     background-color: var(--rich-black);
     color: white;
     margin: 0;
