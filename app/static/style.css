@@ -13,6 +13,7 @@
     src: url('./fonts/balatro.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 body {
@@ -20,10 +21,19 @@ body {
     background-color: var(--rich-black);
     color: white;
     margin: 0;
+    line-height: 1.5; /* Increase line height for better text visibility */
 }
 
 button, input, select, textarea {
     font-family: 'Balatro', sans-serif;
+}
+
+/* Adjust font rendering to prevent clipping */
+* {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-feature-settings: "liga" on; /* Enable ligatures if available */
 }
 
 .container {
@@ -65,6 +75,7 @@ nav a:hover {
 
 .sort-controls h2, .filter-controls h2 {
     margin-top: 0;
+    line-height: 1.3;
 }
 
 .sort-form, .filter-form {
@@ -76,18 +87,36 @@ nav a:hover {
 
 .sort-form label, .filter-form label {
     font-weight: bold;
+    line-height: 1.3;
+    align-self: center; /* Vertically center labels */
 }
 
 .sort-form select, .filter-form select, .filter-form button {
-    padding: 0.5rem;
+    padding: 0.7rem 0.5rem;
     border-radius: 3px;
     border: none;
+    line-height: 1.3;
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .sort-form select, .filter-form select {
+    padding: 1rem 0.5rem; /* Increased top/bottom padding */
+    border-radius: 3px;
+    border: none;
+    line-height: 1.4; /* Increased line height */
+    box-sizing: border-box;
     background-color: white;
     color: black;
     min-width: 120px;
+    height: auto;
+    text-transform: none; /* Ensure text isn't transformed */
+    -webkit-appearance: none; /* Remove default styling for consistent appearance */
+    -moz-appearance: none;
+    appearance: none;
+    
+    /* Fix for letter clipping at the bottom */
+    padding-top: 1.1rem;
+    padding-bottom: 0.7rem;
 }
 
 .sort-form select:focus, .filter-form select:focus {
@@ -100,6 +129,8 @@ nav a:hover {
     cursor: pointer;
     font-weight: bold;
     grid-column: span 2;
+    padding: 0.8rem 0.5rem; /* Increase vertical padding */
+    height: auto; /* Allow height to adjust to content */
 }
 
 .filter-form button:hover {
@@ -119,22 +150,27 @@ nav a:hover {
 
 .search-input {
     flex: 1;
-    padding: 0.75rem;
+    padding: 0.9rem 0.75rem;
     border-radius: 5px;
     border: none;
     background-color: white;
     color: black;
     font-size: 1rem;
+    line-height: 1.3;
+    box-sizing: border-box;
+    height: auto;
 }
 
 .search-button {
-    padding: 0.75rem 1.5rem;
+    padding: 0.9rem 1.5rem;
     border-radius: 5px;
     border: none;
     background-color: var(--blue-ncs);
     color: white;
     font-weight: bold;
     cursor: pointer;
+    line-height: 1.3;
+    height: auto;
 }
 
 .search-button:hover {
@@ -145,6 +181,7 @@ nav a:hover {
     color: var(--blue-ncs);
     text-decoration: none;
     font-weight: bold;
+    line-height: 1.3;
 }
 
 .clear-search:hover {
@@ -161,6 +198,7 @@ nav a:hover {
     border-radius: 5px;
     overflow: hidden;
     margin-top: 1rem;
+    line-height: 1.4;
 }
 
 .grid-header {
@@ -182,12 +220,14 @@ nav a:hover {
 }
 
 .header-item, .cell {
-    padding: 12px 15px;
+    padding: 15px 15px;
     background-color: var(--prussian-blue);
     text-align: left;
     word-break: break-word;
     display: flex;
     align-items: center;
+    line-height: 1.4;
+    box-sizing: border-box;
 }
 
 .header-item {
@@ -197,9 +237,10 @@ nav a:hover {
 
 .no-results {
     grid-column: 1 / -1;
-    padding: 20px;
+    padding: 25px;
     text-align: center;
     background-color: var(--prussian-blue);
+    line-height: 1.4;
 }
 
 /* Responsive design for smaller screens */
@@ -227,7 +268,13 @@ nav a:hover {
     }
     
     .header-item, .cell {
-        padding: 8px 10px;
+        padding: 12px 10px;
+    }
+    
+    .sort-form select, .filter-form select, .filter-form button,
+    .search-input, .search-button {
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
     }
 }
 
@@ -246,7 +293,13 @@ nav a:hover {
     }
     
     .header-item, .cell {
-        padding: 6px 8px;
+        padding: 10px 8px;
+    }
+    
+    .sort-form select, .filter-form select, .filter-form button,
+    .search-input, .search-button {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
     }
 }
 
