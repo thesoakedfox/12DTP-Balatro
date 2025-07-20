@@ -98,14 +98,18 @@
         {% for joker in jokers %}
         <div class="grid-row">
             <div class="cell">
-                {% if joker.sprite %}
-                    <img src="{{ url_for('static', filename='sprites/' + joker.sprite) }}" alt="{{ joker.name }}" style="max-width: 100px; max-height: 140px;">
-                {% else %}
-                    <span style="color: #888;">No sprite</span>
-                {% endif %}
+                <a href="{{ url_for('joker_detail', joker_id=joker.id) }}" class="sprite-link">
+                    {% if joker.sprite %}
+                        <img src="{{ url_for('static', filename='sprites/' + joker.sprite) }}" alt="{{ joker.name }}" class="sprite-image">
+                    {% else %}
+                        <span class="no-sprite">No sprite</span>
+                    {% endif %}
+                </a>
             </div>
             <div class="cell">{{ joker.id }}</div>
-            <div class="cell">{{ joker.name }}</div>
+            <div class="cell">
+                <a href="{{ url_for('joker_detail', joker_id=joker.id) }}" class="name-link">{{ joker.name }}</a>
+            </div>
             <div class="cell">{{ joker.cost }}</div>
             <div class="cell">{{ joker.rarity }}</div>
             <div class="cell">{{ joker.unlock_req }}</div>

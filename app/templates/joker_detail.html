@@ -1,0 +1,64 @@
+{% extends "layouts.html" %}
+{% block content %}
+<div class="joker-detail-container">
+    <a href="{{ url_for('jokers') }}" class="back-link">← Back to All Jokers</a>
+    
+    {% if joker %}
+    <div class="joker-header">
+        <div class="joker-sprite-container">
+            {% if joker.sprite %}
+                <img src="{{ url_for('static', filename='sprites/' + joker.sprite) }}" alt="{{ joker.name }}" class="joker-sprite">
+            {% else %}
+                <div class="no-sprite">No Image Available</div>
+            {% endif %}
+        </div>
+        <div class="joker-title">
+            <h1>{{ joker.name }}</h1>
+            <div class="joker-meta">
+                <span class="rarity {{ joker.rarity_name.lower().replace(' ', '-') }}">{{ joker.rarity_name }}</span>
+                <span class="type">{{ joker.type_name }}</span>
+                <span class="activation">{{ joker.activation_name }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="joker-details">
+        <div class="detail-card">
+            <h2>Joker Information</h2>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">ID:</span>
+                    <span class="detail-value">{{ joker.id }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Cost:</span>
+                    <span class="detail-value">{{ joker.cost }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Rarity:</span>
+                    <span class="detail-value">{{ joker.rarity_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Type:</span>
+                    <span class="detail-value">{{ joker.type_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Activation:</span>
+                    <span class="detail-value">{{ joker.activation_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Unlock Requirement:</span>
+                    <span class="detail-value">{{ joker.unlock_req }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="error-message">
+        <h2>Joker Not Found</h2>
+        <p>Sorry, we couldn't find the joker you're looking for.</p>
+        <a href="{{ url_for('jokers') }}">Browse all jokers</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

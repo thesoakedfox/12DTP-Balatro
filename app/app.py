@@ -3,16 +3,21 @@ import sqlite3
 
 app = Flask(__name__)
 
+
 def get_db_connection():
     conn = sqlite3.connect('D:/12DTP-Balatro/app/balatro.db')
     conn.row_factory = sqlite3.Row
     return conn
 
+
 @app.route('/')
 def home():
     return render_template('home.html')
 
+
 @app.route('/jokers')
+
+
 def jokers():
     # Get sorting parameters from request
     sort_by = request.args.get('sort_by', 'id')
@@ -52,7 +57,9 @@ def jokers():
     conn = get_db_connection()
     try:
         # Get filter options for the dropdowns
-        rarities = conn.execute('SELECT id, rarity_name FROM Rarity ORDER BY id').fetchall()
+        rarities = conn.execute(
+            'SELECT id, rarity_name FROM Rarity ORDER BY id'
+        ).fetchall()
         types = conn.execute('SELECT id, type_name FROM Type ORDER BY id').fetchall()
         activations = conn.execute('SELECT id, activation_name FROM Activation ORDER BY id').fetchall()
         
@@ -120,6 +127,45 @@ def jokers():
                           type_filter=type_filter,
                           activation_filter=activation_filter,
                           search_query=search_query)
+
+@app.route('/joker/<int:joker_id>')
+def joker_detail(joker_id):
+    """Display details for a specific joker"""
+    conn = get_db_connection()
+    try:
+        # Get the specific joker
+        joker = conn.execute('''
+            SELECT
+                j.id,
+                j.name,
+                j.cost,
+                j.unlock_req,
+                r.rarity_name,
+                r.id as rarity_id,
+                t.type_name,
+                t.id as type_id,
+                a.activation_name,
+                a.id as activation_id,
+                j.sprite
+            FROM Joker j
+            JOIN Rarity r ON j.rarity_id = r.id
+            JOIN Type t ON j.type_id = t.id
+            JOIN Activation a ON j.activation_id = a.id
+            WHERE j.id = ?
+        ''', (joker_id,)).fetchone()
+        
+        if joker is None:
+            # Return 404 if joker not found
+            return render_template('404.html'), 404
+            
+    except Exception as e:
+        # Handle database errors
+        joker = None
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
+    
+    return render_template('joker_detail.html', joker=joker)
 
 # Custom 404 error handler
 @app.errorhandler(404)
