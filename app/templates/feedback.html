@@ -1,0 +1,44 @@
+{% extends "layouts.html" %}
+{% block content %}
+<div class="feedback-container">
+    <h1>Feedback Form</h1>
+    <p>We value your feedback! Please share your thoughts about the Balatro Joker Viewer.</p>
+    
+    <form method="POST" action="{{ url_for('feedback') }}" class="feedback-form">
+        <div class="form-group">
+            <label for="name">Name (Optional):</label>
+            <input type="text" id="name" name="name" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email (Optional):</label>
+            <input type="email" id="email" name="email" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="feedback">Feedback *:</label>
+            <textarea id="feedback" name="feedback" class="form-textarea" rows="5" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="rating">Rating (1-5 stars):</label>
+            <select id="rating" name="rating" class="form-select" required>
+                <option value="">Select a rating</option>
+                <option value="1">1 Star - Poor</option>
+                <option value="2">2 Stars - Fair</option>
+                <option value="3">3 Stars - Good</option>
+                <option value="4">4 Stars - Very Good</option>
+                <option value="5">5 Stars - Excellent</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="submit-button">Submit Feedback</button>
+    </form>
+    
+    {% if message %}
+    <div class="message {{ message_type }}">
+        {{ message }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,23 +1,20 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
+import hashlib
+import os
 
 app = Flask(__name__)
-
 
 def get_db_connection():
     conn = sqlite3.connect('D:/12DTP-Balatro/app/balatro.db')
     conn.row_factory = sqlite3.Row
     return conn
 
-
 @app.route('/')
 def home():
     return render_template('home.html')
 
-
 @app.route('/jokers')
-
-
 def jokers():
     # Get sorting parameters from request
     sort_by = request.args.get('sort_by', 'id')
@@ -57,9 +54,7 @@ def jokers():
     conn = get_db_connection()
     try:
         # Get filter options for the dropdowns
-        rarities = conn.execute(
-            'SELECT id, rarity_name FROM Rarity ORDER BY id'
-        ).fetchall()
+        rarities = conn.execute('SELECT id, rarity_name FROM Rarity ORDER BY id').fetchall()
         types = conn.execute('SELECT id, type_name FROM Type ORDER BY id').fetchall()
         activations = conn.execute('SELECT id, activation_name FROM Activation ORDER BY id').fetchall()
         
@@ -156,6 +151,7 @@ def joker_detail(joker_id):
         
         if joker is None:
             # Return 404 if joker not found
+            conn.close()
             return render_template('404.html'), 404
             
     except Exception as e:
@@ -166,6 +162,60 @@ def joker_detail(joker_id):
         conn.close()
     
     return render_template('joker_detail.html', joker=joker)
+
+@app.route('/feedback', methods=['GET', 'POST'])
+def feedback():
+    """Handle feedback form submission"""
+    if request.method == 'POST':
+        # Get form data
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        feedback_text = request.form.get('feedback', '').strip()
+        rating = request.form.get('rating', '').strip()
+        
+        # Validate required fields
+        if not feedback_text or not rating:
+            return render_template('feedback.html', 
+                                message='Please fill in all required fields.', 
+                                message_type='error')
+        
+        # Hash sensitive data for privacy
+        hashed_name = hashlib.sha256(name.encode()).hexdigest() if name else None
+        hashed_email = hashlib.sha256(email.encode()).hexdigest() if email else None
+        
+        # Store feedback in database
+        try:
+            conn = get_db_connection()
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS Feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name_hash TEXT,
+                    email_hash TEXT,
+                    feedback TEXT NOT NULL,
+                    rating INTEGER NOT NULL,
+                    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            conn.execute('''
+                INSERT INTO Feedback (name_hash, email_hash, feedback, rating)
+                VALUES (?, ?, ?, ?)
+            ''', (hashed_name, hashed_email, feedback_text, int(rating)))
+            
+            conn.commit()
+            conn.close()
+            
+            return render_template('feedback.html', 
+                                message='Thank you for your feedback!', 
+                                message_type='success')
+                                
+        except Exception as e:
+            return render_template('feedback.html', 
+                                message='An error occurred while submitting your feedback. Please try again.', 
+                                message_type='error')
+    
+    # For GET requests, show the form
+    return render_template('feedback.html')
 
 # Custom 404 error handler
 @app.errorhandler(404)
