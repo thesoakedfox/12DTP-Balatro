@@ -18,6 +18,13 @@
                 <span class="rarity {{ joker.rarity_name.lower().replace(' ', '-') }}">{{ joker.rarity_name }}</span>
                 <span class="type">{{ joker.type_name }}</span>
                 <span class="activation">{{ joker.activation_name }}</span>
+                <a href="{{ url_for('toggle_unlock', joker_id=joker.id) }}" class="unlock-toggle {% if joker.unlocked %}unlocked{% else %}locked{% endif %}">
+                    {% if joker.unlocked %}
+                        ✓ Unlocked
+                    {% else %}
+                        ✗ Locked
+                    {% endif %}
+                </a>
             </div>
         </div>
     </div>

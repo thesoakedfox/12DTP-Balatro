@@ -8,6 +8,7 @@
             <input type="hidden" name="type" value="{{ type_filter }}">
             <input type="hidden" name="activation" value="{{ activation_filter }}">
             <input type="hidden" name="search" value="{{ search_query }}">
+            <input type="hidden" name="unlocked" value="{{ unlocked_filter }}">
             
             <label for="sort_by">Sort by:</label>
             <select name="sort_by" id="sort_by" onchange="this.form.submit()">
@@ -62,6 +63,13 @@
                 {% endfor %}
             </select>
             
+            <label for="unlocked">Unlock Status:</label>
+            <select name="unlocked" id="unlocked" onchange="this.form.submit()">
+                <option value="all" {% if unlocked_filter == 'all' %}selected{% endif %}>All Jokers</option>
+                <option value="unlocked" {% if unlocked_filter == 'unlocked' %}selected{% endif %}>Unlocked</option>
+                <option value="locked" {% if unlocked_filter == 'locked' %}selected{% endif %}>Not Unlocked</option>
+            </select>
+            
             <button type="submit">Apply Filters</button>
         </form>
     </div>
@@ -74,11 +82,12 @@
         <input type="hidden" name="rarity" value="{{ rarity_filter }}">
         <input type="hidden" name="type" value="{{ type_filter }}">
         <input type="hidden" name="activation" value="{{ activation_filter }}">
+        <input type="hidden" name="unlocked" value="{{ unlocked_filter }}">
         
         <input type="text" name="search" value="{{ search_query }}" placeholder="Search jokers by name..." class="search-input" maxlength="100">
         <button type="submit" class="search-button">Search</button>
         {% if search_query %}
-        <a href="{{ url_for('jokers', sort_by=current_sort, order=current_order, rarity=rarity_filter, type=type_filter, activation=activation_filter) }}" class="clear-search">Clear</a>
+        <a href="{{ url_for('jokers', sort_by=current_sort, order=current_order, rarity=rarity_filter, type=type_filter, activation=activation_filter, unlocked=unlocked_filter) }}" class="clear-search">Clear</a>
         {% endif %}
     </form>
 </div>
@@ -93,6 +102,7 @@
         <div class="header-item">Unlock Requirement</div>
         <div class="header-item">Type</div>
         <div class="header-item">Activation</div>
+        <div class="header-item">Unlocked</div>
     </div>
     <div class="grid-body">
         {% for joker in jokers %}
@@ -115,6 +125,15 @@
             <div class="cell">{{ joker.unlock_req }}</div>
             <div class="cell">{{ joker.type }}</div>
             <div class="cell">{{ joker.activation }}</div>
+            <div class="cell">
+                <a href="{{ url_for('toggle_unlock', joker_id=joker.id) }}" class="unlock-toggle {% if joker.unlocked %}unlocked{% else %}locked{% endif %}">
+                    {% if joker.unlocked %}
+                        ✓ Unlocked
+                    {% else %}
+                        ✗ Locked
+                    {% endif %}
+                </a>
+            </div>
         </div>
         {% else %}
         <div class="no-results">

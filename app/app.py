@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import hashlib
 import os
 
 app = Flask(__name__)
+app.secret_key = 'balatro_joker_viewer_secret_key'  # Required for session management
 
 def get_db_connection():
     conn = sqlite3.connect('D:/12DTP-Balatro/app/balatro.db')
@@ -12,10 +13,99 @@ def get_db_connection():
 
 @app.route('/')
 def home():
+    if 'username' in session:
+        return redirect(url_for('jokers'))
     return render_template('home.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password'].strip()
+        
+        # Validate form data
+        if not username or not password:
+            return render_template('login.html', error='Please fill in all required fields')
+        
+        # Hash the password
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        
+        conn = get_db_connection()
+        try:
+            # Check credentials against database
+            user = conn.execute('SELECT * FROM User WHERE username = ? AND password_hash = ?', 
+                               (username, hashed_password)).fetchone()
+            
+            if user:
+                # Login successful
+                session['username'] = username
+                session['user_id'] = user['id']
+                return redirect(url_for('jokers'))
+            else:
+                # Login failed
+                return render_template('login.html', error='Invalid username or password')
+        except Exception as e:
+            return render_template('login.html', error='An error occurred during login')
+        finally:
+            conn.close()
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    session.pop('user_id', None)
+    return redirect(url_for('home'))
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password'].strip()
+        confirm_password = request.form['confirm_password'].strip()
+        
+        # Validate form data
+        if not username or not password:
+            return render_template('signup.html', error='Please fill in all required fields')
+        
+        if password != confirm_password:
+            return render_template('signup.html', error='Passwords do not match')
+        
+        if len(password) < 6:
+            return render_template('signup.html', error='Password must be at least 6 characters long')
+        
+        # Hash the password
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        
+        conn = get_db_connection()
+        try:
+            # Check if username already exists
+            existing_user = conn.execute('SELECT * FROM User WHERE username = ?', (username,)).fetchone()
+            if existing_user:
+                return render_template('signup.html', error='Username already exists')
+            
+            # Create new user
+            conn.execute('INSERT INTO User (username, password_hash) VALUES (?, ?)', 
+                        (username, hashed_password))
+            conn.commit()
+            
+            # Log the user in automatically after signup
+            session['username'] = username
+            session['user_id'] = conn.execute('SELECT id FROM User WHERE username = ?', (username,)).fetchone()['id']
+            
+            return redirect(url_for('jokers'))
+        except Exception as e:
+            return render_template('signup.html', error='An error occurred during registration')
+        finally:
+            conn.close()
+    
+    return render_template('signup.html')
 @app.route('/jokers')
 def jokers():
+    # Redirect to login if user is not logged in
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
     # Get sorting parameters from request
     sort_by = request.args.get('sort_by', 'id')
     order = request.args.get('order', 'asc')
@@ -25,6 +115,7 @@ def jokers():
     type_filter = request.args.get('type', 'all')
     activation_filter = request.args.get('activation', 'all')
     search_query = request.args.get('search', '').strip()
+    unlocked_filter = request.args.get('unlocked', 'all')  # New filter for unlocked status
     
     # Limit search query length to prevent abuse
     if len(search_query) > 100:
@@ -51,6 +142,13 @@ def jokers():
     order_sql = 'ASC' if order == 'asc' else 'DESC'
     sort_column_sql = sort_columns_map.get(sort_by, 'j.id')
     
+    # Get session ID for user tracking
+    session_id = session.get('user_id')
+    if not session_id:
+        # Generate a session ID if one doesn't exist
+        session_id = os.urandom(16).hex()
+        session['user_id'] = session_id
+    
     conn = get_db_connection()
     try:
         # Get filter options for the dropdowns
@@ -68,16 +166,18 @@ def jokers():
                 j.unlock_req,
                 t.type_name as type,
                 a.activation_name as activation,
-                j.sprite
+                j.sprite,
+                u.unlocked as unlocked
             FROM Joker j
             JOIN Rarity r ON j.rarity_id = r.id
             JOIN Type t ON j.type_id = t.id
             JOIN Activation a ON j.activation_id = a.id
+            LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.session_id = ?
         '''
         
         # Add WHERE conditions based on filters
         where_conditions = []
-        params = []
+        params = [session_id]  # Add session ID for user tracking
         
         if rarity_filter != 'all':
             where_conditions.append('r.id = ?')
@@ -94,6 +194,13 @@ def jokers():
         if search_query:
             where_conditions.append('j.name LIKE ?')
             params.append(f'%{search_query}%')
+            
+        # Filter by unlocked status
+        if unlocked_filter == 'unlocked':
+            where_conditions.append('u.unlocked = 1')
+        elif unlocked_filter == 'locked':
+            # Either no entry in UserJoker table or unlocked = 0
+            where_conditions.append('(u.unlocked IS NULL OR u.unlocked = 0)')
         
         query = base_query
         if where_conditions:
@@ -121,11 +228,24 @@ def jokers():
                           rarity_filter=rarity_filter,
                           type_filter=type_filter,
                           activation_filter=activation_filter,
-                          search_query=search_query)
+                          search_query=search_query,
+                          unlocked_filter=unlocked_filter)
 
 @app.route('/joker/<int:joker_id>')
 def joker_detail(joker_id):
     """Display details for a specific joker"""
+    # Redirect to login if user is not logged in
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
+    # Use user ID from session if available, otherwise generate session ID
+    user_id = session.get('user_id')
+    if not user_id:
+        # Generate a session ID if one doesn't exist
+        session_id = os.urandom(16).hex()
+    else:
+        session_id = f"user_{user_id}"
+    
     conn = get_db_connection()
     try:
         # Get the specific joker
@@ -141,13 +261,15 @@ def joker_detail(joker_id):
                 t.id as type_id,
                 a.activation_name,
                 a.id as activation_id,
-                j.sprite
+                j.sprite,
+                u.unlocked as unlocked
             FROM Joker j
             JOIN Rarity r ON j.rarity_id = r.id
             JOIN Type t ON j.type_id = t.id
             JOIN Activation a ON j.activation_id = a.id
+            LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.session_id = ?
             WHERE j.id = ?
-        ''', (joker_id,)).fetchone()
+        ''', (session_id, joker_id)).fetchone()
         
         if joker is None:
             # Return 404 if joker not found
@@ -162,6 +284,56 @@ def joker_detail(joker_id):
         conn.close()
     
     return render_template('joker_detail.html', joker=joker)
+
+@app.route('/toggle_unlock/<int:joker_id>')
+def toggle_unlock(joker_id):
+    """Toggle the unlock status of a joker for the current user"""
+    # Redirect to login if user is not logged in
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
+    # Use user ID from session if available, otherwise generate session ID
+    user_id = session.get('user_id')
+    if not user_id:
+        # Generate a session ID if one doesn't exist
+        session_id = os.urandom(16).hex()
+    else:
+        session_id = f"user_{user_id}"
+    
+    conn = get_db_connection()
+    try:
+        # Check if there's already an entry for this joker and session
+        existing = conn.execute('''
+            SELECT unlocked FROM UserJoker 
+            WHERE joker_id = ? AND session_id = ?
+        ''', (joker_id, session_id)).fetchone()
+        
+        if existing:
+            # Toggle the unlocked status
+            new_status = 0 if existing['unlocked'] == 1 else 1
+            conn.execute('''
+                UPDATE UserJoker 
+                SET unlocked = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE joker_id = ? AND session_id = ?
+            ''', (new_status, joker_id, session_id))
+        else:
+            # Create a new entry with unlocked = 1
+            conn.execute('''
+                INSERT INTO UserJoker (joker_id, session_id, unlocked)
+                VALUES (?, ?, 1)
+            ''', (joker_id, session_id))
+            
+        conn.commit()
+    except Exception as e:
+        print(f"Error toggling unlock status: {e}")
+    finally:
+        conn.close()
+    
+    # Redirect back to the referring page, or to jokers page if not available
+    referrer = request.headers.get('Referer')
+    if referrer:
+        return redirect(referrer)
+    return redirect(url_for('jokers'))
 
 @app.route('/feedback', methods=['GET', 'POST'])
 def feedback():
@@ -186,17 +358,6 @@ def feedback():
         # Store feedback in database
         try:
             conn = get_db_connection()
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS Feedback (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name_hash TEXT,
-                    email_hash TEXT,
-                    feedback TEXT NOT NULL,
-                    rating INTEGER NOT NULL,
-                    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
             conn.execute('''
                 INSERT INTO Feedback (name_hash, email_hash, feedback, rating)
                 VALUES (?, ?, ?, ?)
@@ -223,4 +384,49 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
+    # Initialize database tables if they don't exist
+    conn = get_db_connection()
+    try:
+        # Create User table for authentication
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS User (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Create Feedback table
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS Feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name_hash TEXT,
+                email_hash TEXT,
+                feedback TEXT NOT NULL,
+                rating INTEGER NOT NULL,
+                submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Create UserJoker table
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS UserJoker (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                joker_id INTEGER NOT NULL,
+                session_id TEXT NOT NULL,
+                unlocked INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (joker_id) REFERENCES Joker (id),
+                UNIQUE(joker_id, session_id)
+            )
+        ''')
+        
+        conn.commit()
+    except Exception as e:
+        print(f"Error creating tables: {e}")
+    finally:
+        conn.close()
+    
     app.run(debug=True)

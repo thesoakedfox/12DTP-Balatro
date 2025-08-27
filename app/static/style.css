@@ -10,6 +10,8 @@
     --rare-blue: #4080ff;
     --epic-purple: #c040ff;
     --legendary-orange: #ff8000;
+    --locked-gray: #888888;
+    --unlocked-green: #4CAF50;
 }
 
 /* Custom Font */
@@ -51,6 +53,9 @@ nav {
     background-color: var(--prussian-blue);
     padding: 1rem;
     margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 nav a {
@@ -61,6 +66,11 @@ nav a {
 
 nav a:hover {
     color: var(--blue-ncs);
+}
+
+.user-info {
+    margin-right: 1rem;
+    margin-left: auto;
 }
 
 /* Controls Container using CSS Grid */
@@ -280,6 +290,30 @@ nav a:hover {
     font-style: italic;
 }
 
+/* Unlock toggle styles */
+.unlock-toggle {
+    text-decoration: none;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    display: inline-block;
+    transition: background-color 0.2s;
+}
+
+.unlock-toggle.unlocked {
+    background-color: var(--unlocked-green);
+    color: white;
+}
+
+.unlock-toggle.locked {
+    background-color: var(--locked-gray);
+    color: white;
+}
+
+.unlock-toggle:hover {
+    opacity: 0.8;
+}
+
 /* Joker Detail Page */
 .joker-detail-container {
     padding: 1rem;
@@ -336,6 +370,7 @@ nav a:hover {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .rarity {
@@ -503,6 +538,35 @@ nav a:hover {
     background-color: var(--fire-engine-red);
 }
 
+/* Login Form */
+.login-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: var(--prussian-blue);
+    border-radius: 5px;
+}
+
+.login-form {
+    margin-top: 1rem;
+}
+
+.login-button {
+    background-color: var(--blue-ncs);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 3px;
+    font-family: 'Balatro', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+.login-button:hover {
+    background-color: #1a6a94;
+}
+
 /* Responsive design for smaller screens */
 @media (max-width: 768px) {
     .controls-container {
@@ -550,8 +614,18 @@ nav a:hover {
         grid-template-columns: 1fr;
     }
     
-    .feedback-container {
+    .feedback-container, .login-container {
         padding: 1rem;
+    }
+    
+    nav {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-info {
+        margin-left: 0;
+        margin-top: 0.5rem;
     }
 }
 
