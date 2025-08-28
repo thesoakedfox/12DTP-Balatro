@@ -9,6 +9,10 @@ from flask import Flask, redirect, render_template, request, session, url_for
 app = Flask(__name__)
 app.secret_key = 'balatro_joker_viewer_secret_key'
 
+# Simple input limits to prevent abuse/DoS
+MAX_USERNAME_LENGTH = 64
+MAX_PASSWORD_LENGTH = 256
+
 
 def get_db_connection():
     """Get database connection with row factory."""
@@ -37,6 +41,13 @@ def login():
             return render_template(
                 'login.html',
                 error='Please fill in all required fields'
+            )
+
+        # Enforce maximum lengths
+        if len(username) > MAX_USERNAME_LENGTH or len(password) > MAX_PASSWORD_LENGTH:
+            return render_template(
+                'login.html',
+                error='Invalid username or password'
             )
 
         # Hash the password
