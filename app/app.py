@@ -95,6 +95,19 @@ def signup():
                 error='Please fill in all required fields'
             )
 
+        # Enforce maximum lengths
+        if len(username) > MAX_USERNAME_LENGTH:
+            return render_template(
+                'signup.html',
+                error=f'Username must be at most {MAX_USERNAME_LENGTH} characters long'
+            )
+
+        if len(password) > MAX_PASSWORD_LENGTH:
+            return render_template(
+                'signup.html',
+                error='Password is too long'
+            )
+
         if password != confirm_password:
             return render_template(
                 'signup.html',
