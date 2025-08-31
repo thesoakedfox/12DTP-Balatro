@@ -16,7 +16,8 @@ MAX_PASSWORD_LENGTH = 256
 
 def get_db_connection():
     """Get database connection with row factory."""
-    conn = sqlite3.connect('D:/12DTP-Balatro/app/balatro.db')
+    db_path = os.path.join(os.path.dirname(__file__), 'balatro.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
