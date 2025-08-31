@@ -222,12 +222,8 @@ def jokers():
     order_sql = 'ASC' if order == 'asc' else 'DESC'
     sort_column_sql = sort_columns_map.get(sort_by, 'j.id')
 
-    # Get session ID for user tracking
-    session_id = session.get('user_id')
-    if not session_id:
-        # Generate a session ID if one doesn't exist
-        session_id = os.urandom(16).hex()
-        session['user_id'] = session_id
+    # Use authenticated user's ID for tracking
+    user_id = session.get('user_id')
 
     conn = get_db_connection()
     try:
