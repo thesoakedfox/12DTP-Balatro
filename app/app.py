@@ -254,7 +254,7 @@ def jokers():
             JOIN Rarity r ON j.rarity_id = r.id
             JOIN Type t ON j.type_id = t.id
             JOIN Activation a ON j.activation_id = a.id
-            LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.session_id = ?
+            LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.user_id = ?
         '''
 
         # Add WHERE conditions based on filters
@@ -410,8 +410,8 @@ def toggle_unlock(joker_id):
         # Check if there's already an entry for this joker and session
         existing = conn.execute('''
             SELECT unlocked FROM UserJoker
-            WHERE joker_id = ? AND session_id = ?
-        ''', (joker_id, session_id)).fetchone()
+            WHERE joker_id = ? AND user_id = ?
+        ''', (joker_id, user_id)).fetchone()
 
         if existing:
             # Toggle the unlocked status
@@ -419,14 +419,14 @@ def toggle_unlock(joker_id):
             conn.execute('''
                 UPDATE UserJoker
                 SET unlocked = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE joker_id = ? AND session_id = ?
-            ''', (new_status, joker_id, session_id))
+                WHERE joker_id = ? AND user_id = ?
+            ''', (new_status, joker_id, user_id))
         else:
             # Create a new entry with unlocked = 1
             conn.execute('''
-                INSERT INTO UserJoker (joker_id, session_id, unlocked)
+                INSERT INTO UserJoker (joker_id, user_id, unlocked)
                 VALUES (?, ?, 1)
-            ''', (joker_id, session_id))
+            ''', (joker_id, user_id))
 
         conn.commit()
 
