@@ -330,14 +330,8 @@ def joker_detail(joker_id):
     if 'username' not in session:
         return redirect(url_for('login'))
 
-    # Use user ID from session if available, otherwise generate session ID
+    # Use authenticated user's ID
     user_id = session.get('user_id')
-    if not user_id:
-        # Generate a session ID if one doesn't exist
-        session_id = os.urandom(16).hex()
-        session['user_id'] = session_id
-    else:
-        session_id = f"user_{user_id}"
 
     conn = get_db_connection()
     try:
