@@ -259,7 +259,7 @@ def jokers():
 
         # Add WHERE conditions based on filters
         where_conditions = []
-        params = [session_id]  # Add session ID for user tracking
+        params = [user_id]
 
         if rarity_filter != 'all':
             where_conditions.append('r.id = ?')
