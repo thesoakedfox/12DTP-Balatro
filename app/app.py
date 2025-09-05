@@ -356,7 +356,7 @@ def joker_detail(joker_id):
             JOIN Activation a ON j.activation_id = a.id
             LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.session_id = ?
             WHERE j.id = ?
-        ''', (session_id, joker_id)).fetchone()
+        ''', (user_id, joker_id)).fetchone()
 
         if joker is None:
             # Return 404 if joker not found
