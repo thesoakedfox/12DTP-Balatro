@@ -354,7 +354,7 @@ def joker_detail(joker_id):
             JOIN Rarity r ON j.rarity_id = r.id
             JOIN Type t ON j.type_id = t.id
             JOIN Activation a ON j.activation_id = a.id
-            LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.session_id = ?
+            LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.user_id = ?
             WHERE j.id = ?
         ''', (user_id, joker_id)).fetchone()
 
