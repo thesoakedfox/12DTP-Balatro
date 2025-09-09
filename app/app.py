@@ -22,6 +22,52 @@ def get_db_connection():
     return conn
 
 
+# Convenience DB helpers
+def query_db(query, params=(), one=False):
+    """Run a SELECT query and return rows.
+
+    Args:
+        query: SQL query string with placeholders (?).
+        params: Tuple/list of parameters for the query.
+        one: When True, return only the first row (or None).
+
+    Returns:
+        list[sqlite3.Row] | sqlite3.Row | None
+    """
+    conn = get_db_connection()
+    try:
+        cur = conn.execute(query, params)
+        rows = cur.fetchall()
+        return (rows[0] if rows else None) if one else rows
+    finally:
+        conn.close()
+
+
+def execute_db(query, params=()):
+    """Execute a write query (INSERT/UPDATE/DELETE) and commit.
+
+    Returns lastrowid when available.
+    """
+    conn = get_db_connection()
+    try:
+        cur = conn.execute(query, params)
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def query_one(query, params=()):
+    """Shorthand for query_db(..., one=True)."""
+    return query_db(query, params, one=True)
+
+
+def query_value(query, params=(), default=None):
+    """Return the first column of the first row, or default."""
+    row = query_db(query, params, one=True)
+    return (row[0] if row is not None else default)
+
+
 @app.route('/')
 def home():
     """Home page route."""
@@ -54,13 +100,12 @@ def login():
         # Hash the password
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        conn = get_db_connection()
         try:
             # Check credentials against database
-            user = conn.execute(
+            user = query_one(
                 'SELECT * FROM User WHERE username = ? AND password_hash = ?',
                 (username, hashed_password)
-            ).fetchone()
+            )
 
             if user:
                 # Login successful
@@ -78,8 +123,6 @@ def login():
                 'login.html',
                 error='An error occurred during login'
             )
-        finally:
-            conn.close()
 
     return render_template('login.html')
 
@@ -135,32 +178,26 @@ def signup():
         # Hash the password
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        conn = get_db_connection()
         try:
             # Check if username already exists
-            existing_user = conn.execute(
-                'SELECT * FROM User WHERE username = ?',
+            existing_user = query_one(
+                'SELECT 1 FROM User WHERE username = ?',
                 (username,)
-            ).fetchone()
+            )
             if existing_user:
                 return render_template(
                     'signup.html',
                     error='Username already exists'
                 )
 
-            # Create new user
-            conn.execute(
+            # Create new user and capture inserted id
+            user_id = execute_db(
                 'INSERT INTO User (username, password_hash) VALUES (?, ?)',
                 (username, hashed_password)
             )
-            conn.commit()
 
             # Log the user in automatically after signup
             session['username'] = username
-            user_id = conn.execute(
-                'SELECT id FROM User WHERE username = ?',
-                (username,)
-            ).fetchone()['id']
             session['user_id'] = user_id
 
             return redirect(url_for('jokers'))
@@ -169,8 +206,6 @@ def signup():
                 'signup.html',
                 error='An error occurred during registration'
             )
-        finally:
-            conn.close()
 
     return render_template('signup.html')
 
@@ -225,18 +260,11 @@ def jokers():
     # Use authenticated user's ID for tracking
     user_id = session.get('user_id')
 
-    conn = get_db_connection()
     try:
         # Get filter options for the dropdowns
-        rarities = conn.execute(
-            'SELECT id, rarity_name FROM Rarity ORDER BY id'
-        ).fetchall()
-        types = conn.execute(
-            'SELECT id, type_name FROM Type ORDER BY id'
-        ).fetchall()
-        activations = conn.execute(
-            'SELECT id, activation_name FROM Activation ORDER BY id'
-        ).fetchall()
+        rarities = query_db('SELECT id, rarity_name FROM Rarity ORDER BY id')
+        types = query_db('SELECT id, type_name FROM Type ORDER BY id')
+        activations = query_db('SELECT id, activation_name FROM Activation ORDER BY id')
 
         # Build the query with optional filters
         base_query = '''
@@ -290,15 +318,13 @@ def jokers():
 
         query += f' ORDER BY {sort_column_sql} {order_sql}'
 
-        jokers_result = conn.execute(query, params).fetchall()
+        jokers_result = query_db(query, params)
     except Exception:
         # Handle any database errors
         jokers_result = []
         rarities = []
         types = []
         activations = []
-    finally:
-        conn.close()
 
     return render_template(
         'jokers.html',
@@ -333,10 +359,9 @@ def joker_detail(joker_id):
     # Use authenticated user's ID
     user_id = session.get('user_id')
 
-    conn = get_db_connection()
     try:
         # Get the specific joker
-        joker = conn.execute('''
+        joker = query_one('''
             SELECT
                 j.id,
                 j.name,
@@ -356,19 +381,16 @@ def joker_detail(joker_id):
             JOIN Activation a ON j.activation_id = a.id
             LEFT JOIN UserJoker u ON j.id = u.joker_id AND u.user_id = ?
             WHERE j.id = ?
-        ''', (user_id, joker_id)).fetchone()
+        ''', (user_id, joker_id))
 
         if joker is None:
             # Return 404 if joker not found
-            conn.close()
             return render_template('404.html'), 404
 
     except Exception as e:
         # Handle database errors
         joker = None
         print(f"Database error: {e}")
-    finally:
-        conn.close()
 
     return render_template('joker_detail.html', joker=joker)
 
@@ -393,32 +415,29 @@ def toggle_unlock(joker_id):
     # Use authenticated user's ID
     user_id = session.get('user_id')
 
-    conn = get_db_connection()
     try:
-        # Check if there's already an entry for this joker and session
-        existing = conn.execute('''
+        # Check if there's already an entry for this joker and user
+        existing = query_one('''
             SELECT unlocked FROM UserJoker
             WHERE joker_id = ? AND user_id = ?
-        ''', (joker_id, user_id)).fetchone()
+        ''', (joker_id, user_id))
 
         if existing:
             # Toggle the unlocked status
             new_status = 0 if existing['unlocked'] == 1 else 1
-            conn.execute('''
+            execute_db('''
                 UPDATE UserJoker
                 SET unlocked = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE joker_id = ? AND user_id = ?
             ''', (new_status, joker_id, user_id))
         else:
             # Create a new entry with unlocked = 1
-            conn.execute('''
+            execute_db('''
                 INSERT INTO UserJoker (joker_id, user_id, unlocked)
                 VALUES (?, ?, 1)
             ''', (joker_id, user_id))
 
-        conn.commit()
-
-        # If this is an AJAX request, return a JSON response
+        # If this is an AJAX request, return an empty 200
         if is_ajax:
             return '', 200
 
@@ -426,8 +445,6 @@ def toggle_unlock(joker_id):
         print(f"Error toggling unlock status: {e}")
         if is_ajax:
             return '', 500
-    finally:
-        conn.close()
 
     # For non-AJAX requests, redirect back to referring page or jokers page
     if not is_ajax:
@@ -465,14 +482,10 @@ def feedback():
 
         # Store feedback in database
         try:
-            conn = get_db_connection()
-            conn.execute('''
+            execute_db('''
                 INSERT INTO Feedback (name_hash, email_hash, feedback, rating)
                 VALUES (?, ?, ?, ?)
             ''', (hashed_name, hashed_email, feedback_text, int(rating)))
-
-            conn.commit()
-            conn.close()
 
             return render_template(
                 'feedback.html',
