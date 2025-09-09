@@ -392,12 +392,6 @@ def toggle_unlock(joker_id):
 
     # Use user ID from session if available, otherwise generate session ID
     user_id = session.get('user_id')
-    if not user_id:
-        # Generate a session ID if one doesn't exist
-        session_id = os.urandom(16).hex()
-        session['user_id'] = session_id
-    else:
-        session_id = f"user_{user_id}"
 
     conn = get_db_connection()
     try:
@@ -489,7 +483,8 @@ def feedback():
         except Exception:
             return render_template(
                 'feedback.html',
-                message='An error occurred while submitting feedback. Please try again.',
+                message=('An error occurred while submitting feedback. '
+                         'Please try again.'),
                 message_type='error'
             )
 
