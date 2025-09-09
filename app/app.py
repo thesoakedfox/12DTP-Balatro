@@ -390,7 +390,7 @@ def toggle_unlock(joker_id):
     # Check if this is an AJAX request
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    # Use user ID from session if available, otherwise generate session ID
+    # Use authenticated user's ID
     user_id = session.get('user_id')
 
     conn = get_db_connection()
@@ -524,18 +524,18 @@ def create_tables():
             )
         ''')
 
-        # Create UserJoker table
+        # Create UserJoker table (user <-> joker many-to-many)
         conn.execute('''
             CREATE TABLE IF NOT EXISTS UserJoker (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
                 joker_id INTEGER NOT NULL,
-                session_id TEXT NOT NULL,
                 unlocked INTEGER DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES User (id),
                 FOREIGN KEY (joker_id) REFERENCES Joker (id),
-                UNIQUE(joker_id, session_id)
-            )
+                UNIQUE(user_id, joker_id)            )
         ''')
 
         conn.commit()
