@@ -1,15 +1,24 @@
 {% extends "layouts.html" %}
 {% block content %}
+
+<!-- Controls and filters section -->
 <div class="controls-container">
+    
+    <!-- Sorting controls -->
     <div class="sort-controls">
         <h2>Sort Jokers</h2>
+        
+        <!-- Sort form - preserves current filters while changing sort -->
         <form method="GET" class="sort-form">
+            <!-- Hidden inputs to preserve current filter state -->
             <input type="hidden" name="rarity" value="{{ rarity_filter }}">
             <input type="hidden" name="type" value="{{ type_filter }}">
             <input type="hidden" name="activation" value="{{ activation_filter }}">
             <input type="hidden" name="search" value="{{ search_query }}">
             <input type="hidden" name="unlocked" value="{{ unlocked_filter }}">
+            <!-- End hidden filter preservation inputs -->
             
+            <!-- Sort by field dropdown -->
             <label for="sort_by">Sort by:</label>
             <select name="sort_by" id="sort_by" onchange="this.form.submit()">
                 <option value="id" {% if current_sort == 'id' %}selected{% endif %}>ID</option>
@@ -17,22 +26,33 @@
                 <option value="cost" {% if current_sort == 'cost' %}selected{% endif %}>Cost</option>
                 <option value="rarity_id" {% if current_sort == 'rarity_id' %}selected{% endif %}>Rarity</option>
             </select>
+            <!-- End sort by field dropdown -->
             
+            <!-- Sort order dropdown -->
             <label for="order">Order:</label>
             <select name="order" id="order" onchange="this.form.submit()">
                 <option value="asc" {% if current_order == 'asc' %}selected{% endif %}>Ascending</option>
                 <option value="desc" {% if current_order == 'desc' %}selected{% endif %}>Descending</option>
             </select>
+            <!-- End sort order dropdown -->
         </form>
+        <!-- End sort form -->
     </div>
+    <!-- End sorting controls -->
 
+    <!-- Filter controls -->
     <div class="filter-controls">
         <h2>Filter Jokers</h2>
+        
+        <!-- Filter form - preserves current sort while changing filters -->
         <form method="GET" class="filter-form">
+            <!-- Hidden inputs to preserve current sort state -->
             <input type="hidden" name="sort_by" value="{{ current_sort }}">
             <input type="hidden" name="order" value="{{ current_order }}">
             <input type="hidden" name="search" value="{{ search_query }}">
+            <!-- End hidden sort preservation inputs -->
             
+            <!-- Rarity filter dropdown -->
             <label for="rarity">Rarity:</label>
             <select name="rarity" id="rarity" onchange="this.form.submit()">
                 <option value="all">All Rarities</option>
@@ -42,7 +62,9 @@
                 </option>
                 {% endfor %}
             </select>
+            <!-- End rarity filter dropdown -->
             
+            <!-- Type filter dropdown -->
             <label for="type">Type:</label>
             <select name="type" id="type" onchange="this.form.submit()">
                 <option value="all">All Types</option>
@@ -52,7 +74,9 @@
                 </option>
                 {% endfor %}
             </select>
+            <!-- End type filter dropdown -->
             
+            <!-- Activation filter dropdown -->
             <label for="activation">Activation:</label>
             <select name="activation" id="activation" onchange="this.form.submit()">
                 <option value="all">All Activations</option>
@@ -62,37 +86,55 @@
                 </option>
                 {% endfor %}
             </select>
+            <!-- End activation filter dropdown -->
             
+            <!-- Unlock status filter dropdown -->
             <label for="unlocked">Unlock Status:</label>
             <select name="unlocked" id="unlocked" onchange="this.form.submit()">
                 <option value="all" {% if unlocked_filter == 'all' %}selected{% endif %}>All Jokers</option>
                 <option value="unlocked" {% if unlocked_filter == 'unlocked' %}selected{% endif %}>Unlocked</option>
                 <option value="locked" {% if unlocked_filter == 'locked' %}selected{% endif %}>Not Unlocked</option>
             </select>
+            <!-- End unlock status filter dropdown -->
             
             <button type="submit">Apply Filters</button>
         </form>
+        <!-- End filter form -->
     </div>
+    <!-- End filter controls -->
 </div>
+<!-- End controls and filters section -->
 
+<!-- Search functionality -->
 <div class="search-container">
+    <!-- Search form - preserves all current state while adding search -->
     <form method="GET" class="search-form">
+        <!-- Hidden inputs to preserve current sort and filter state -->
         <input type="hidden" name="sort_by" value="{{ current_sort }}">
         <input type="hidden" name="order" value="{{ current_order }}">
         <input type="hidden" name="rarity" value="{{ rarity_filter }}">
         <input type="hidden" name="type" value="{{ type_filter }}">
         <input type="hidden" name="activation" value="{{ activation_filter }}">
         <input type="hidden" name="unlocked" value="{{ unlocked_filter }}">
+        <!-- End hidden state preservation inputs -->
         
+        <!-- Search input and controls -->
         <input type="text" name="search" value="{{ search_query }}" placeholder="Search jokers by name..." class="search-input" maxlength="100">
         <button type="submit" class="search-button">Search</button>
+        
+        <!-- Clear search button (only shown when search is active) -->
         {% if search_query %}
         <a href="{{ url_for('jokers', sort_by=current_sort, order=current_order, rarity=rarity_filter, type=type_filter, activation=activation_filter, unlocked=unlocked_filter) }}" class="clear-search">Clear</a>
         {% endif %}
+        <!-- End clear search button -->
     </form>
+    <!-- End search form -->
 </div>
+<!-- End search functionality -->
 
+<!-- Jokers data grid -->
 <div class="grid-container">
+    <!-- Grid header with column labels -->
     <div class="grid-header">
         <div class="header-item">Sprite</div>
         <div class="header-item">ID</div>
@@ -104,9 +146,14 @@
         <div class="header-item">Activation</div>
         <div class="header-item">Unlocked</div>
     </div>
+    <!-- End grid header -->
+    
+    <!-- Grid body with joker data -->
     <div class="grid-body">
         {% for joker in jokers %}
+        <!-- Individual joker row -->
         <div class="grid-row">
+            <!-- Sprite cell with link to detail page -->
             <div class="cell">
                 <a href="{{ url_for('joker_detail', joker_id=joker.id) }}" class="sprite-link">
                     {% if joker.sprite %}
@@ -116,6 +163,9 @@
                     {% endif %}
                 </a>
             </div>
+            <!-- End sprite cell -->
+            
+            <!-- Basic joker information cells -->
             <div class="cell">{{ joker.id }}</div>
             <div class="cell">
                 <a href="{{ url_for('joker_detail', joker_id=joker.id) }}" class="name-link">{{ joker.name }}</a>
@@ -125,8 +175,11 @@
             <div class="cell">{{ joker.unlock_req }}</div>
             <div class="cell">{{ joker.type }}</div>
             <div class="cell">{{ joker.activation }}</div>
+            <!-- End basic joker information cells -->
+            
+            <!-- Unlock status toggle cell -->
             <div class="cell">
-                <a href="{{ url_for('toggle_unlock', joker_id=joker.id) }}" class="unlock-toggle {% if joker.unlocked %}unlocked{% else %}locked{% endif %}">
+                <a href="{{ url_for('toggle_unlock', joker_id=joker.id) }}" class="unlock-toggle {% if joker.unlocked %}unlocked{% else %}locked{% endif %}" data-joker-id="{{ joker.id }}">
                     {% if joker.unlocked %}
                         ✓ Unlocked
                     {% else %}
@@ -134,12 +187,64 @@
                     {% endif %}
                 </a>
             </div>
+            <!-- End unlock status toggle cell -->
         </div>
+        <!-- End individual joker row -->
+        
         {% else %}
+        <!-- No results message (shown when no jokers match filters) -->
         <div class="no-results">
             No jokers found matching the selected filters.
         </div>
+        <!-- End no results message -->
         {% endfor %}
     </div>
+    <!-- End grid body -->
 </div>
+<!-- End jokers data grid -->
+
+<!-- AJAX functionality for unlock toggles -->
+<script>
+    // Add AJAX functionality for toggle buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleLinks = document.querySelectorAll('.unlock-toggle');
+        
+        toggleLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const jokerId = this.getAttribute('data-joker-id');
+                const url = this.getAttribute('href');
+                const linkElement = this;
+                
+                // Send AJAX request to toggle unlock status
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Toggle the visual state without page reload
+                        if (linkElement.classList.contains('unlocked')) {
+                            linkElement.classList.remove('unlocked');
+                            linkElement.classList.add('locked');
+                            linkElement.textContent = '✗ Locked';
+                        } else {
+                            linkElement.classList.remove('locked');
+                            linkElement.classList.add('unlocked');
+                            linkElement.textContent = '✓ Unlocked';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    });
+</script>
+<!-- End AJAX functionality -->
+
 {% endblock %}

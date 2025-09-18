@@ -1,10 +1,15 @@
 {% extends "layouts.html" %}
 {% block content %}
+
+<!-- Joker detail page container -->
 <div class="joker-detail-container">
+    <!-- Navigation back to jokers list -->
     <a href="{{ url_for('jokers') }}" class="back-link">← Back to All Jokers</a>
     
     {% if joker %}
+    <!-- Joker header section with sprite and title -->
     <div class="joker-header">
+        <!-- Joker sprite display -->
         <div class="joker-sprite-container">
             {% if joker.sprite %}
                 <img src="{{ url_for('static', filename='sprites/' + joker.sprite) }}" alt="{{ joker.name }}" class="joker-sprite">
@@ -12,27 +17,42 @@
                 <div class="no-sprite">No Image Available</div>
             {% endif %}
         </div>
+        <!-- End joker sprite display -->
+        
+        <!-- Joker title and metadata -->
         <div class="joker-title">
             <h1>{{ joker.name }}</h1>
+            
+            <!-- Joker metadata badges and unlock toggle -->
             <div class="joker-meta">
                 <span class="rarity {{ joker.rarity_name.lower().replace(' ', '-') }}">{{ joker.rarity_name }}</span>
                 <span class="type">{{ joker.type_name }}</span>
                 <span class="activation">{{ joker.activation_name }}</span>
-                <a href="{{ url_for('toggle_unlock', joker_id=joker.id) }}" class="unlock-toggle {% if joker.unlocked %}unlocked{% else %}locked{% endif %}">
+                
+                <!-- Unlock status toggle (with AJAX functionality) -->
+                <a href="{{ url_for('toggle_unlock', joker_id=joker.id) }}" class="unlock-toggle {% if joker.unlocked %}unlocked{% else %}locked{% endif %}" id="detail-toggle" data-joker-id="{{ joker.id }}">
                     {% if joker.unlocked %}
                         ✓ Unlocked
                     {% else %}
                         ✗ Locked
                     {% endif %}
                 </a>
+                <!-- End unlock status toggle -->
             </div>
+            <!-- End joker metadata badges and unlock toggle -->
         </div>
+        <!-- End joker title and metadata -->
     </div>
+    <!-- End joker header section -->
     
+    <!-- Detailed joker information -->
     <div class="joker-details">
         <div class="detail-card">
             <h2>Joker Information</h2>
+            
+            <!-- Information grid layout -->
             <div class="detail-grid">
+                <!-- Individual detail items -->
                 <div class="detail-item">
                     <span class="detail-label">ID:</span>
                     <span class="detail-value">{{ joker.id }}</span>
@@ -57,15 +77,67 @@
                     <span class="detail-label">Unlock Requirement:</span>
                     <span class="detail-value">{{ joker.unlock_req }}</span>
                 </div>
+                <!-- End individual detail items -->
             </div>
+            <!-- End information grid layout -->
         </div>
     </div>
+    <!-- End detailed joker information -->
+    
     {% else %}
+    <!-- Error message when joker is not found -->
     <div class="error-message">
         <h2>Joker Not Found</h2>
         <p>Sorry, we couldn't find the joker you're looking for.</p>
         <a href="{{ url_for('jokers') }}">Browse all jokers</a>
     </div>
+    <!-- End error message -->
     {% endif %}
 </div>
+<!-- End joker detail page container -->
+
+<!-- AJAX functionality for detail page unlock toggle -->
+<script>
+    // Add AJAX functionality for toggle button on detail page
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleLink = document.getElementById('detail-toggle');
+        
+        if (toggleLink) {
+            toggleLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const jokerId = this.getAttribute('data-joker-id');
+                const url = this.getAttribute('href');
+                const linkElement = this;
+                
+                // Send AJAX request to toggle unlock status
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Toggle the visual state without page reload
+                        if (linkElement.classList.contains('unlocked')) {
+                            linkElement.classList.remove('unlocked');
+                            linkElement.classList.add('locked');
+                            linkElement.textContent = '✗ Locked';
+                        } else {
+                            linkElement.classList.remove('locked');
+                            linkElement.classList.add('unlocked');
+                            linkElement.textContent = '✓ Unlocked';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        }
+    });
+</script>
+<!-- End AJAX functionality -->
+
 {% endblock %}

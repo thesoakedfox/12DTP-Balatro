@@ -41,6 +41,7 @@ button, input, select, textarea {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-feature-settings: "liga" on;
+    font-feature-settings: "liga" on;
 }
 
 .container {

@@ -21,5 +21,15 @@
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+    <script>
+        // Reload page from server if it's loaded from the browser's cache (bfcache).
+        // This ensures that dynamically updated content (like joker unlock status)
+        // is fresh when a user navigates back to a page.
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
 </body>
 </html>
