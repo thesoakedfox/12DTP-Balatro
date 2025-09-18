@@ -1,24 +1,46 @@
+"""
+Balatro Joker Viewer Application
+A Flask web application for viewing and managing Balatro jokers.
+"""
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import hashlib
 import os
 
+
 app = Flask(__name__)
-app.secret_key = 'balatro_joker_viewer_secret_key'  # Required for session management
+# Required for session management
+app.secret_key = 'balatro_joker_viewer_secret_key'
+
 
 def get_db_connection():
+    """Create and return a database connection.
+    
+    Returns:
+        sqlite3.Connection: A connection to the balatro database
+    """
     conn = sqlite3.connect('D:/12DTP-Balatro/app/balatro.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 @app.route('/')
 def home():
+    """Render the home page.
+    
+    Returns:
+        Rendered home page template or redirect to jokers page if user is logged in
+    """
     if 'username' in session:
         return redirect(url_for('jokers'))
     return render_template('home.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Handle user login.
+    
+    Returns:
+        Rendered login page or redirect to jokers page on successful login
+    """
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password'].strip()
@@ -33,8 +55,10 @@ def login():
         conn = get_db_connection()
         try:
             # Check credentials against database
-            user = conn.execute('SELECT * FROM User WHERE username = ? AND password_hash = ?', 
-                               (username, hashed_password)).fetchone()
+            user = conn.execute(
+                'SELECT * FROM User WHERE username = ? AND password_hash = ?',
+                (username, hashed_password)
+            ).fetchone()
             
             if user:
                 # Login successful
@@ -53,12 +77,23 @@ def login():
 
 @app.route('/logout')
 def logout():
+    """Handle user logout.
+    
+    Returns:
+        Redirect to home page
+    """
     session.pop('username', None)
     session.pop('user_id', None)
     return redirect(url_for('home'))
 
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    """Handle user registration.
+    
+    Returns:
+        Rendered signup page or redirect to jokers page on successful registration
+    """
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password'].strip()
@@ -85,8 +120,7 @@ def signup():
                 return render_template('signup.html', error='Username already exists')
             
             # Create new user
-            conn.execute('INSERT INTO User (username, password_hash) VALUES (?, ?)', 
-                        (username, hashed_password))
+            conn.execute('INSERT INTO User (username, password_hash) VALUES (?, ?)', (username, hashed_password))
             conn.commit()
             
             # Log the user in automatically after signup
@@ -102,6 +136,11 @@ def signup():
     return render_template('signup.html')
 @app.route('/jokers')
 def jokers():
+    """Display the list of jokers with filtering and sorting options.
+    
+    Returns:
+        Rendered jokers page with list of jokers
+    """
     # Redirect to login if user is not logged in
     if 'username' not in session:
         return redirect(url_for('login'))
@@ -205,9 +244,9 @@ def jokers():
         query = base_query
         if where_conditions:
             query += ' WHERE ' + ' AND '.join(where_conditions)
-            
+
         query += f' ORDER BY {sort_column_sql} {order_sql}'
-        
+
         jokers = conn.execute(query, params).fetchall()
     except Exception as e:
         # Handle any database errors
@@ -218,22 +257,31 @@ def jokers():
     finally:
         conn.close()
     
-    return render_template('jokers.html', 
-                          jokers=jokers,
-                          rarities=rarities,
-                          types=types,
-                          activations=activations,
-                          current_sort=sort_by, 
-                          current_order=order,
-                          rarity_filter=rarity_filter,
-                          type_filter=type_filter,
-                          activation_filter=activation_filter,
-                          search_query=search_query,
-                          unlocked_filter=unlocked_filter)
+    return render_template(
+        'jokers.html',
+        jokers=jokers,
+        rarities=rarities,
+        types=types,
+        activations=activations,
+        current_sort=sort_by,
+        current_order=order,
+        rarity_filter=rarity_filter,
+        type_filter=type_filter,
+        activation_filter=activation_filter,
+        search_query=search_query,
+        unlocked_filter=unlocked_filter
+    )
 
 @app.route('/joker/<int:joker_id>')
 def joker_detail(joker_id):
-    """Display details for a specific joker"""
+    """Display details for a specific joker.
+    
+    Args:
+        joker_id (int): The ID of the joker to display
+        
+    Returns:
+        Rendered template with joker details or 404 page if not found
+    """
     # Redirect to login if user is not logged in
     if 'username' not in session:
         return redirect(url_for('login'))
@@ -285,9 +333,17 @@ def joker_detail(joker_id):
     
     return render_template('joker_detail.html', joker=joker)
 
+
 @app.route('/toggle_unlock/<int:joker_id>')
 def toggle_unlock(joker_id):
-    """Toggle the unlock status of a joker for the current user"""
+    """Toggle the unlock status of a joker for the current user.
+    
+    Args:
+        joker_id (int): The ID of the joker to toggle unlock status for
+        
+    Returns:
+        Redirect back to the referring page or jokers page
+    """
     # Redirect to login if user is not logged in
     if 'username' not in session:
         return redirect(url_for('login'))
@@ -366,14 +422,18 @@ def feedback():
             conn.commit()
             conn.close()
             
-            return render_template('feedback.html', 
-                                message='Thank you for your feedback!', 
-                                message_type='success')
+            return render_template(
+        'feedback.html',
+        message='Thank you for your feedback!',
+        message_type='success'
+    )
                                 
         except Exception as e:
-            return render_template('feedback.html', 
-                                message='An error occurred while submitting your feedback. Please try again.', 
-                                message_type='error')
+            return render_template(
+        'feedback.html',
+        message='An error occurred while submitting your feedback. Please try again.',
+        message_type='error'
+    )
     
     # For GET requests, show the form
     return render_template('feedback.html')
@@ -381,6 +441,14 @@ def feedback():
 # Custom 404 error handler
 @app.errorhandler(404)
 def page_not_found(e):
+    """Handle 404 errors.
+    
+    Args:
+        e: The error object
+        
+    Returns:
+        Rendered 404 page with 404 status code
+    """
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
